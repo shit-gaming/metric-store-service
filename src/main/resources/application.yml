@@ -1,0 +1,135 @@
+spring:
+  application:
+    name: metric-store-service
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  # R2DBC Configuration for reactive database access
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:metrics_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      initial-size: 10
+      max-size: 30
+      max-idle-time: 30m
+      max-acquire-time: 5s
+      max-create-connection-time: 2s
+      validation-query: SELECT 1
+
+  cache:
+    type: simple # Using in-memory cache
+    cache-names: metrics,metric-by-id
+
+server:
+  port: ${SERVER_PORT:8082}
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: always
+
+# Application-specific configuration
+metric-store:
+  ingestion:
+    buffer:
+      max-size: 10000
+      flush-interval-ms: 5000
+      batch-size: 1000
+      worker-threads: 10
+  
+  storage:
+    hot-tier:
+      retention-days: 10
+      compression-after-days: 7
+    
+    warm-tier:
+      retention-days: 30
+    
+    cold-tier:
+      enabled: true
+      s3:
+        bucket-name: ${S3_BUCKET:cold-storage}
+        endpoint: ${S3_ENDPOINT:http://localhost:9000}
+        access-key: ${S3_ACCESS_KEY:minioadmin}
+        secret-key: ${S3_SECRET_KEY:minioadmin}
+        region: ${S3_REGION:us-east-1}
+      
+      parquet:
+        row-group-size: 100000
+        page-size: 1048576 # 1MB
+        compression: SNAPPY
+    
+    migration:
+      enabled: true
+      cron: "0 0 2 * * ?" # Daily at 2 AM
+      batch-size: 10000
+  
+  query:
+    default-limit: 100
+    max-limit: 10000
+    timeout-seconds: 30
+    cache:
+      enabled: true
+      ttl-seconds: 300
+  
+  cardinality:
+    max-series-per-metric: 10000  # Max unique label combinations per metric
+    max-labels-per-metric: 10     # Max number of labels per metric
+    max-label-value-length: 100    # Max length of label values
+    warning-threshold: 0.8         # Warn at 80% of max cardinality
+    check-window-hours: 24         # Time window for cardinality checks
+  
+  archival:
+    enabled: true                  # Enable cold storage archival
+    cron: "0 0 2 * * ?"           # Run daily at 2 AM
+    batch-size: 5000              # Records per batch
+    delay-between-batches-ms: 1000 # Delay to reduce DB load
+    max-concurrent-uploads: 3      # Parallel uploads to S3/MinIO
+    vacuum-threshold-rows: 100000  # Run vacuum after this many deletes
+  
+  api:
+    rate-limit:
+      enabled: true
+      requests-per-second: 1000
+      burst-size: 2000
+
+logging:
+  level:
+    root: INFO
+    com.metricstore: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/metric-store.log
+    max-size: 10MB
+    max-history: 30
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  packages-to-scan: com.metricstore.api
+  paths-to-match: /api/**

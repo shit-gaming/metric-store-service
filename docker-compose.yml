@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # TimescaleDB for time-series data storage
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: metric-store-timescaledb
+    environment:
+      POSTGRES_DB: metrics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TS_TUNE_MAX_CONNS: 100
+      TS_TUNE_MAX_BG_WORKERS: 8
+    ports:
+      - "5433:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./create_tables.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - metric-net
+  
+  # MinIO for S3-compatible cold storage
+  minio:
+    image: minio/minio:latest
+    container_name: metric-store-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - metric-net
+
+  # Create MinIO bucket
+  createbuckets:
+    image: minio/mc:latest
+    container_name: metric-store-createbuckets
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/cold-storage || true;
+      /usr/bin/mc policy set public myminio/cold-storage;
+      exit 0;
+      "
+    networks:
+      - metric-net
+  
+  # Metric Store Service
+  metric-store:
+    build: .
+    image: metric-store-service:latest
+    container_name: metric-store-service
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      DB_HOST: timescaledb
+      DB_PORT: 5432
+      DB_NAME: metrics_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: cold-storage
+      SPRING_PROFILES_ACTIVE: docker
+      JAVA_OPTS: -Xms512m -Xmx1024m
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - metric-net
+
+volumes:
+  timescale_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  metric-net:
+    driver: bridge

@@ -1,0 +1,63 @@
+spring:
+  profiles:
+    active: test
+  
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+  
+  # Disable Flyway for tests
+  flyway:
+    enabled: false
+
+# Metric store test configuration
+metric-store:
+  ingestion:
+    buffer:
+      max-size: 100
+      flush-interval-ms: 1000
+      batch-size: 50
+      worker-threads: 2
+  
+  storage:
+    hot-tier:
+      retention-days: 1
+      compression-after-days: 1
+    
+    cold-tier:
+      enabled: false
+  
+  query:
+    default-limit: 10
+    max-limit: 100
+    timeout-seconds: 5
+    cache:
+      enabled: false
+  
+  cardinality:
+    max-series-per-metric: 1000
+    max-labels-per-metric: 5
+    max-label-value-length: 50
+    warning-threshold: 0.8
+    check-window-hours: 1
+  
+  api:
+    rate-limit:
+      enabled: false
+
+# Logging for tests
+logging:
+  level:
+    root: WARN
+    com.metricstore: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# MinIO test configuration (disabled for unit tests)
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: test-bucket

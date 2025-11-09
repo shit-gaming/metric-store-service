@@ -1,0 +1,601 @@
+{
+	"info": {
+		"_postman_id": "metric-store-api-collection-v2",
+		"name": "Metric Store API v2",
+		"description": "Complete API collection for Metric Store Service with TimescaleDB - Includes Rate Calculation and Continuous Aggregates",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": "2.0.0"
+	},
+	"item": [
+		{
+			"name": "1. Health & Status",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["actuator", "health"]
+						},
+						"description": "Get health status of all components"
+					}
+				},
+				{
+					"name": "Prometheus Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/prometheus",
+							"host": ["{{baseUrl}}"],
+							"path": ["actuator", "prometheus"]
+						},
+						"description": "Get application metrics in Prometheus format"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Metric Registration",
+			"item": [
+				{
+					"name": "Register Counter Metric",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"http_requests_total\",\n    \"type\": \"COUNTER\",\n    \"description\": \"Total HTTP requests\",\n    \"unit\": \"requests\",\n    \"labels\": [\"endpoint\", \"method\", \"status_code\"],\n    \"retentionDays\": 30\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "register"]
+						},
+						"description": "Register a COUNTER metric for rate calculation"
+					}
+				},
+				{
+					"name": "Register Gauge Metric",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"api_request_duration_ms\",\n    \"type\": \"GAUGE\",\n    \"description\": \"API request duration in milliseconds\",\n    \"unit\": \"milliseconds\",\n    \"labels\": [\"endpoint\", \"method\", \"status_code\"],\n    \"retentionDays\": 30\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "register"]
+						},
+						"description": "Register a GAUGE metric for aggregations"
+					}
+				},
+				{
+					"name": "List All Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics?limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics"],
+							"query": [
+								{
+									"key": "type",
+									"value": "COUNTER",
+									"description": "Filter by type",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "http",
+									"description": "Search by name",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Metric by Name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/by-name/http_requests_total",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "by-name", "http_requests_total"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Data Ingestion",
+			"item": [
+				{
+					"name": "Ingest Counter Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metrics\": [\n        {\n            \"name\": \"http_requests_total\",\n            \"value\": 1000,\n            \"timestamp\": \"{{currentTime}}\",\n            \"labels\": {\n                \"endpoint\": \"/api/users\",\n                \"method\": \"GET\",\n                \"status_code\": \"200\"\n            }\n        },\n        {\n            \"name\": \"http_requests_total\",\n            \"value\": 1050,\n            \"timestamp\": \"{{currentTimePlus1Min}}\",\n            \"labels\": {\n                \"endpoint\": \"/api/users\",\n                \"method\": \"GET\",\n                \"status_code\": \"200\"\n            }\n        },\n        {\n            \"name\": \"http_requests_total\",\n            \"value\": 1125,\n            \"timestamp\": \"{{currentTimePlus2Min}}\",\n            \"labels\": {\n                \"endpoint\": \"/api/users\",\n                \"method\": \"GET\",\n                \"status_code\": \"200\"\n            }\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/ingest",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "ingest"]
+						},
+						"description": "Ingest counter data for rate calculation testing"
+					}
+				},
+				{
+					"name": "Ingest Gauge Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metrics\": [\n        {\n            \"name\": \"api_request_duration_ms\",\n            \"value\": 45.5,\n            \"timestamp\": \"{{currentTime}}\",\n            \"labels\": {\n                \"endpoint\": \"/api/users\",\n                \"method\": \"GET\",\n                \"status_code\": \"200\"\n            }\n        },\n        {\n            \"name\": \"api_request_duration_ms\",\n            \"value\": 52.3,\n            \"timestamp\": \"{{currentTimePlus1Min}}\",\n            \"labels\": {\n                \"endpoint\": \"/api/users\",\n                \"method\": \"GET\",\n                \"status_code\": \"200\"\n            }\n        },\n        {\n            \"name\": \"api_request_duration_ms\",\n            \"value\": 38.7,\n            \"timestamp\": \"{{currentTimePlus2Min}}\",\n            \"labels\": {\n                \"endpoint\": \"/api/users\",\n                \"method\": \"GET\",\n                \"status_code\": \"200\"\n            }\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/ingest",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "ingest"]
+						},
+						"description": "Ingest gauge data for aggregation testing"
+					}
+				},
+				{
+					"name": "Batch Ingest NDJSON",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-ndjson"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"http_requests_total\",\"value\":2000,\"timestamp\":\"2024-01-01T12:00:00Z\",\"labels\":{\"endpoint\":\"/api/orders\"}}\n{\"name\":\"http_requests_total\",\"value\":2100,\"timestamp\":\"2024-01-01T12:01:00Z\",\"labels\":{\"endpoint\":\"/api/orders\"}}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/ingest/batch",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "ingest", "batch"]
+						},
+						"description": "High-throughput NDJSON ingestion"
+					}
+				},
+				{
+					"name": "Get Ingestion Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/ingest/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "ingest", "stats"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Rate Calculation (NEW)",
+			"item": [
+				{
+					"name": "Calculate Rate for Counter",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"http_requests_total\",\n    \"aggregation\": \"RATE\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\",\n    \"labels\": {\n        \"endpoint\": \"/api/users\",\n        \"method\": \"GET\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Calculate rate per second for counter metrics (handles resets)"
+					}
+				},
+				{
+					"name": "Rate with Interval",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"http_requests_total\",\n    \"aggregation\": \"RATE\",\n    \"interval\": \"5m\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\",\n    \"labels\": {\n        \"endpoint\": \"/api/users\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Calculate rate with 5-minute buckets using aggregates"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Continuous Aggregates (NEW)",
+			"item": [
+				{
+					"name": "Query with 5min Aggregates",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"api_request_duration_ms\",\n    \"aggregation\": \"AVG\",\n    \"interval\": \"5m\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\",\n    \"labels\": {\n        \"endpoint\": \"/api/users\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Uses pre-computed 5-minute continuous aggregates for fast queries"
+					}
+				},
+				{
+					"name": "Query with Hourly Aggregates",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"api_request_duration_ms\",\n    \"aggregation\": \"MAX\",\n    \"interval\": \"1h\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Uses hourly continuous aggregates"
+					}
+				},
+				{
+					"name": "Query with Daily Aggregates",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"api_request_duration_ms\",\n    \"aggregation\": \"AVG\",\n    \"interval\": \"1d\",\n    \"startTime\": \"{{weekAgo}}\",\n    \"endTime\": \"{{endTime}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Uses daily continuous aggregates for long-term trends"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Percentiles & Statistics",
+			"item": [
+				{
+					"name": "Get P95 Latency",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"api_request_duration_ms\",\n    \"aggregation\": \"P95\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Calculate 95th percentile"
+					}
+				},
+				{
+					"name": "Get P99 Latency",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metricName\": \"api_request_duration_ms\",\n    \"aggregation\": \"P99\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query"]
+						},
+						"description": "Calculate 99th percentile"
+					}
+				},
+				{
+					"name": "Get Full Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query/statistics?metricName=api_request_duration_ms&startTime={{startTime}}&endTime={{endTime}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query", "statistics"],
+							"query": [
+								{
+									"key": "metricName",
+									"value": "api_request_duration_ms"
+								},
+								{
+									"key": "startTime",
+									"value": "{{startTime}}"
+								},
+								{
+									"key": "endTime",
+									"value": "{{endTime}}"
+								}
+							]
+						},
+						"description": "Get min, max, avg, p50, p95, p99"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Export Data",
+			"item": [
+				{
+					"name": "Export as JSON",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/export?metricName=api_request_duration_ms&startTime={{startTime}}&endTime={{endTime}}&format=JSON",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "export"],
+							"query": [
+								{
+									"key": "metricName",
+									"value": "api_request_duration_ms"
+								},
+								{
+									"key": "startTime",
+									"value": "{{startTime}}"
+								},
+								{
+									"key": "endTime",
+									"value": "{{endTime}}"
+								},
+								{
+									"key": "format",
+									"value": "JSON"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export as CSV",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/export?metricName=api_request_duration_ms&startTime={{startTime}}&endTime={{endTime}}&format=CSV",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "export"],
+							"query": [
+								{
+									"key": "metricName",
+									"value": "api_request_duration_ms"
+								},
+								{
+									"key": "startTime",
+									"value": "{{startTime}}"
+								},
+								{
+									"key": "endTime",
+									"value": "{{endTime}}"
+								},
+								{
+									"key": "format",
+									"value": "CSV"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export as Prometheus",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/export?metricName=http_requests_total&startTime={{startTime}}&endTime={{endTime}}&format=PROMETHEUS",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "export"],
+							"query": [
+								{
+									"key": "metricName",
+									"value": "http_requests_total"
+								},
+								{
+									"key": "startTime",
+									"value": "{{startTime}}"
+								},
+								{
+									"key": "endTime",
+									"value": "{{endTime}}"
+								},
+								{
+									"key": "format",
+									"value": "PROMETHEUS"
+								}
+							]
+						},
+						"description": "Export in Prometheus exposition format"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Query Variations",
+			"item": [
+				{
+					"name": "Range Query",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query/range?metricName=http_requests_total&start={{startTime}}&end={{endTime}}&step=5m",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query", "range"],
+							"query": [
+								{
+									"key": "metricName",
+									"value": "http_requests_total"
+								},
+								{
+									"key": "start",
+									"value": "{{startTime}}"
+								},
+								{
+									"key": "end",
+									"value": "{{endTime}}"
+								},
+								{
+									"key": "step",
+									"value": "5m"
+								},
+								{
+									"key": "labels.endpoint",
+									"value": "/api/users",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Instant Query",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/metrics/query/instant?metricName=http_requests_total&time={{currentTime}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "metrics", "query", "instant"],
+							"query": [
+								{
+									"key": "metricName",
+									"value": "http_requests_total"
+								},
+								{
+									"key": "time",
+									"value": "{{currentTime}}",
+									"description": "Optional, defaults to now"
+								}
+							]
+						},
+						"description": "Get latest value"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set dynamic timestamps",
+					"const now = new Date();",
+					"const startTime = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2 hours ago",
+					"const endTime = now;",
+					"const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);",
+					"",
+					"pm.variables.set('currentTime', now.toISOString());",
+					"pm.variables.set('currentTimePlus1Min', new Date(now.getTime() + 60000).toISOString());",
+					"pm.variables.set('currentTimePlus2Min', new Date(now.getTime() + 120000).toISOString());",
+					"pm.variables.set('startTime', startTime.toISOString());",
+					"pm.variables.set('endTime', endTime.toISOString());",
+					"pm.variables.set('weekAgo', weekAgo.toISOString());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8082",
+			"type": "string"
+		}
+	]
+}

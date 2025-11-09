@@ -1,0 +1,71 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Build
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+service.log
+application.log
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle (if accidentally added)
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+build.gradle*
+settings.gradle*
+
+# Environment
+.env
+.env.local
+*.env
+
+# Database
+*.db
+*.sqlite
+postgres-data/
+timescale-data/
+
+# Docker volumes
+docker/volumes/
+docker/data/
+
+# Test outputs
+test-results/
+test-output/
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Application specific
+cold-storage/
+minio-data/
+redis-data/

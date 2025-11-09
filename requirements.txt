@@ -1,0 +1,4 @@
+# Python dependencies for test scripts
+requests>=2.31.0
+tabulate
+colorama>=0.4.4
