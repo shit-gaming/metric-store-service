@@ -557,33 +557,3 @@ rm -rf target/
 4. **Write buffer** flushes every 5 seconds or 1000 metrics
 5. **Keep label cardinality reasonable** to avoid storage bloat
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **TimescaleDB** for amazing time-series capabilities
-- **Spring Boot** for the robust framework
-- **Kotlin** for making code concise and expressive
-
-## 📧 Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing issues for solutions
-- Read the [IMPROVEMENTS.md](IMPROVEMENTS.md) for recent updates
-
----
-
-**Version**: 1.0.0  
-**Last Updated**: November 2024  
-**Status**: Production Ready (85% feature complete per tech spec)
