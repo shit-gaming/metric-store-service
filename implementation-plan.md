@@ -17,7 +17,7 @@ This prevents the common failure modes in Prometheus:
 - Index bloat causing slow queries
 - TSDB corruption from exceeding limits
 
-## Phase 1: Project Setup & Infrastructure (Day 1)
+## Phase 1: Project Setup & Infrastructure
 
 ### 1.1 Initialize Project Structure
 - [ ] Create Go module: `go mod init github.com/metric-store`
@@ -47,7 +47,7 @@ This prevents the common failure modes in Prometheus:
   - uber-go/zap (logging)
   ```
 
-## Phase 2: Database Layer (Day 2)
+## Phase 2: Database Layer
 
 ### 2.1 Database Migrations
 - [ ] Install golang-migrate
@@ -72,7 +72,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Retention policies
 - [ ] Continuous aggregates
 
-## Phase 3: Core Models & Storage (Day 3)
+## Phase 3: Core Models & Storage
 
 ### 3.1 Domain Models
 - [ ] Metric model
@@ -92,7 +92,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Auto-registration logic
 - [ ] Validation rules
 
-## Phase 4: Ingestion Pipeline (Day 4)
+## Phase 4: Ingestion Pipeline
 
 ### 4.1 Write Buffer
 - [ ] Buffer implementation
@@ -132,7 +132,7 @@ This prevents the common failure modes in Prometheus:
   - [x] `max-label-value-length`: 100
   - [x] `warning-threshold`: 0.8
 
-## Phase 5: Query Engine (Day 5)
+## Phase 5: Query Engine
 
 ### 5.1 Query Parser
 - [ ] Query parameter parsing
@@ -153,7 +153,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Rate calculations for counters
 - [ ] Time bucketing
 
-## Phase 6: Tiered Storage (Day 6)
+## Phase 6: Tiered Storage
 
 ### 6.1 Migration Service
 - [ ] Chunk identification
@@ -176,7 +176,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Job monitoring
 - [ ] Failure handling
 
-## Phase 7: REST API (Day 7)
+## Phase 7: REST API
 
 ### 7.1 API Gateway
 - [ ] Router setup (Gin)
@@ -200,7 +200,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Error handling
 - [ ] CORS support
 
-## Phase 8: Monitoring & Observability (Day 8)
+## Phase 8: Monitoring & Observability
 
 ### 8.1 Metrics
 - [ ] Prometheus metrics
@@ -220,7 +220,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Database connectivity
 - [ ] S3 connectivity
 
-## Phase 9: Testing (Day 9)
+## Phase 9: Testing
 
 ### 9.1 Unit Tests
 - [ ] Model tests
@@ -240,7 +240,7 @@ This prevents the common failure modes in Prometheus:
 - [ ] Query benchmarks
 - [ ] Memory profiling
 
-## Phase 10: Deployment & Documentation (Day 10)
+## Phase 10: Deployment & Documentation
 
 ### 10.1 Containerization
 - [ ] Dockerfile
